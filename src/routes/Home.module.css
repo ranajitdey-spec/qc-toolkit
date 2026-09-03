@@ -1,0 +1,65 @@
+.title {
+  font-size: 20px;
+  margin: 0 0 var(--space-1);
+}
+
+.sub {
+  color: var(--text-muted);
+  margin: 0 0 var(--space-4);
+  font-size: 14px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--space-3);
+}
+
+.card {
+  aspect-ratio: 1 / 0.85;
+  border-radius: 14px;
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  text-decoration: none;
+  color: #1c1b19;
+  transition: transform 120ms ease, box-shadow 120ms ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+}
+
+.card:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+.cardTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.kicker {
+  font-size: 12px;
+  line-height: 1.35;
+  opacity: 0.75;
+  max-width: 85%;
+}
+
+.arrow {
+  font-size: 15px;
+  flex-shrink: 0;
+}
+
+.cardTitle {
+  font-size: clamp(18px, 2.6vw, 22px);
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+
