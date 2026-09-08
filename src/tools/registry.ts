@@ -32,4 +32,11 @@ export const tools: ToolMeta[] = [
     description: "Compress images client-side without visible quality loss.",
     component: lazy(() => import("./image-compress")),
   },
+   {
+    id: "convert-webp",
+    path: "/tools/convert-webp",
+    name: "Convert to WebP",
+    description: "Batch-convert JPG/PNG to lossless WebP, client-side.",
+    component: lazy(() => import("./convert-webp")),
+  },
 ];
