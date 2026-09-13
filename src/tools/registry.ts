@@ -39,4 +39,11 @@ export const tools: ToolMeta[] = [
     description: "Batch-convert JPG/PNG to lossless WebP, client-side.",
     component: lazy(() => import("./convert-webp")),
   },
+    {
+    id: "card-scraper",
+    path: "/tools/card-scraper",
+    name: "Card Details",
+    description: "Extract video/image assets and metadata from a card page.",
+    component: lazy(() => import("./card-scraper")),
+  },
 ];
