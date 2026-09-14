@@ -9,7 +9,7 @@ interface AssetItem {
 }
 
 function isValidCardUrl(u: string): boolean {
-  return /^https?:\/\/(www\.)?123greetings\.com\/([a-z0-9_]+\/)+[a-z0-9_]+\.html(\?.*)?$/i.test(u);
+  return /^https?:\/\/(www\.|m\.)?123greetings\.com\/([a-z0-9_]+\/)+[a-z0-9_]+\.html(\?.*)?$/i.test(u);
 }
 function matchOne(html: string, re: RegExp): string | null {
   const m = html.match(re);
