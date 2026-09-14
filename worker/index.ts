@@ -78,6 +78,7 @@ async function handleExtract(request: Request): Promise<Response> {
   }
 
   const html = await res.text();
+  console.log("Fetched length:", html.length, "Snippet:", html.slice(0, 200));
 
   const title = matchOne(html, /<li>\s*<h1>([^<]+)<\/h1>\s*<\/li>/i);
   const subtitle = matchOne(html, /<h2 class="seo-list">([^<]+)<\/h2>/i);
