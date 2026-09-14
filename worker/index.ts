@@ -79,6 +79,14 @@ async function handleExtract(request: Request): Promise<Response> {
 
   const html = await res.text();
   console.log("Fetched length:", html.length, "Snippet:", html.slice(0, 200));
+  console.log("Fetched length:", html.length);
+  console.log("Has title tag:", /<title>([^<]*)<\/title>/i.exec(html)?.[1] ?? "NONE FOUND");
+  console.log("Has cat_q1 marker:", html.includes("cat_q1"));
+  console.log("Has breadcrumb:", html.includes("breadcrumb_new"));
+  console.log("Full snippet:", html.slice(0, 1500));
+
+
+
 
   const title = matchOne(html, /<li>\s*<h1>([^<]+)<\/h1>\s*<\/li>/i);
   const subtitle = matchOne(html, /<h2 class="seo-list">([^<]+)<\/h2>/i);
