@@ -52,9 +52,10 @@ export default function AppCard() {
   }
 
   // --- File classification ---
-  const [baseId, setBaseId] = useState("");
+const [baseId, setBaseId] = useState("");
   const [classified, setClassified] = useState<ClassifiedFile[]>([]);
   const [iconInputs, setIconInputs] = useState<Record<string, string>>({});
+  const [iconErrors, setIconErrors] = useState<Record<string, string>>({});
 
   async function handleFiles(fileList: FileList | null) {
     if (!fileList || !baseId.trim()) return;
@@ -63,15 +64,22 @@ export default function AppCard() {
     logEvent("app-card", "classify", { count: results.length });
   }
 
-  function applyIconInput(id: string) {
-    setClassified((prev) =>
-      prev.map((c) => {
-        if (c.id !== id) return c;
-        const ext = (c.file.name.match(/\.[^.]+$/)?.[0] ?? "").toLowerCase();
-        const newName = applyIconBaseName(iconInputs[id] ?? "", ext);
-        return newName ? { ...c, newName, needsIconBaseName: false } : c;
-      }),
-    );
+   function applyIconInput(id: string) {
+    const entry = classified.find((c) => c.id === id);
+    if (!entry) return;
+    const ext = (entry.file.name.match(/\.[^.]+$/)?.[0] ?? "").toLowerCase();
+    const newName = applyIconBaseName(iconInputs[id] ?? "", ext);
+
+    if (!newName) {
+      setIconErrors((prev) => ({ ...prev, [id]: "Must be name-number, e.g. friend_thoughts-155 (hyphen before the number, not an underscore)." }));
+      return;
+    }
+    setIconErrors((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    setClassified((prev) => prev.map((c) => (c.id === id ? { ...c, newName, needsIconBaseName: false } : c)));
   }
 
   function downloadFile(entry: ClassifiedFile) {
@@ -195,21 +203,24 @@ export default function AppCard() {
                 <td>{categoryLabel(c.category)}</td>
                 <td className={styles.filename}>{c.file.name}</td>
                 <td className={styles.filename}>
-                  {c.newName ? (
+                 {c.newName ? (
                     <span className={styles.statusDone}>{c.newName}</span>
                   ) : c.needsIconBaseName ? (
-                    <span className={styles.scrubRow} style={{ margin: 0 }}>
-                      <input
-                        className={styles.textInput}
-                        style={{ width: 160 }}
-                        placeholder="e.g. friend_thoughts-155"
-                        value={iconInputs[c.id] ?? ""}
-                        onChange={(e) => setIconInputs((prev) => ({ ...prev, [c.id]: e.target.value }))}
-                      />
-                      <button className={styles.btn} onClick={() => applyIconInput(c.id)}>
-                        Apply
-                      </button>
-                    </span>
+                    <div>
+                      <span className={styles.iconInputRow}>
+                        <input
+                          className={styles.textInput}
+                          style={{ width: 160 }}
+                          placeholder="e.g. friend_thoughts-155"
+                          value={iconInputs[c.id] ?? ""}
+                          onChange={(e) => setIconInputs((prev) => ({ ...prev, [c.id]: e.target.value }))}
+                        />
+                        <button className={styles.btn} onClick={() => applyIconInput(c.id)}>
+                          Apply
+                        </button>
+                      </span>
+                      {iconErrors[c.id] && <div className={styles.statusWarn}>{iconErrors[c.id]}</div>}
+                    </div>
                   ) : (
                     <span className={styles.statusWarn}>Unrecognized — not renamed</span>
                   )}
