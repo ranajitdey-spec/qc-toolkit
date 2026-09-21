@@ -11,6 +11,8 @@ import { copyToClipboard } from "../../lib/clipboard";
 import { logEvent } from "../../lib/log";
 import sharedStyles from "../shared.module.css";
 import styles from "./styles.module.css";
+import HelpButton from "../../components/HelpButton";
+import { appCardTour } from "./tour";
 
 const FIELDS: { key: keyof ParsedCardEmail; label: string }[] = [
   { key: "q1", label: "Q1" },
@@ -146,7 +148,10 @@ const [baseId, setBaseId] = useState("");
 
   return (
     <div className={sharedStyles.page}>
-      <h1 className={sharedStyles.title}>App Card Details</h1>
+            <h1 className={sharedStyles.title}>
+        App Card Details
+        <HelpButton toolId="app-card" steps={appCardTour} />
+      </h1>
       <p className={sharedStyles.sub}>Paste the App Only Card email, then upload the four attached files.</p>
 
       <label className={sharedStyles.label} htmlFor="raw">
@@ -154,7 +159,7 @@ const [baseId, setBaseId] = useState("");
       </label>
       <textarea id="raw" className={sharedStyles.textarea} rows={10} value={raw} onChange={(e) => setRaw(e.target.value)} />
 
-      <div className={styles.metaCard}>
+      <div id="meta-card" className={styles.metaCard}>
         {FIELDS.map((f) => (
           <div key={f.key} className={styles.metaRow}>
             <span className={styles.metaLabel}>{f.label}</span>
@@ -172,12 +177,14 @@ const [baseId, setBaseId] = useState("");
 
       <div className={styles.controls}>
         <input
+          id="base-id"
           className={styles.textInput}
           placeholder="Base ID (e.g. 1036-018-59-8191)"
           value={baseId}
           onChange={(e) => setBaseId(e.target.value)}
         />
-        <input
+         <input
+          id="classify-file-input"
           type="file"
           accept="video/mp4,image/jpeg,image/png"
           multiple
