@@ -3,6 +3,8 @@ import { convertToWebp, type ConvertResult } from "./convert";
 import { logEvent } from "../../lib/log";
 import sharedStyles from "../shared.module.css";
 import styles from "./styles.module.css";
+import HelpButton from "../../components/HelpButton";
+import { convertWebpTour } from "./tour";
 
 interface FileEntry {
   id: string;
@@ -73,12 +75,15 @@ export default function ConvertWebp() {
 
   return (
     <div className={sharedStyles.page}>
-      <h1 className={sharedStyles.title}>Convert to WebP</h1>
+       <h1 className={sharedStyles.title}>
+        Convert to WebP
+        <HelpButton toolId="convert-webp" steps={convertWebpTour} />
+      </h1>
       <p className={sharedStyles.sub}>JPG/JPEG/PNG to lossless WebP, in the browser. Nothing is uploaded anywhere.</p>
 
       <div className={styles.controls} style={{ marginBottom: 16 }}>
-        <input type="file" accept="image/jpeg,image/png" multiple onChange={(e) => handleFiles(e.target.files)} />
-      </div>
+         <input id="file-input" type="file" accept="image/jpeg,image/png" multiple onChange={(e) => handleFiles(e.target.files)} />
+         </div>
 
       {entries.length > 0 && (
         <>
@@ -89,7 +94,7 @@ export default function ConvertWebp() {
             <button className={styles.btn} onClick={() => toggleAll(false)}>
               Select none
             </button>
-            <button className={styles.btn} onClick={runConversion} disabled={selectedCount === 0}>
+             <button id="convert-btn" className={styles.btn} onClick={runConversion} disabled={selectedCount === 0}>
               Convert {selectedCount > 0 ? `(${selectedCount})` : ""}
             </button>
             {doneEntries.length > 0 && (

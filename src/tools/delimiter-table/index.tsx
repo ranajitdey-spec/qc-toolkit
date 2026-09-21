@@ -3,6 +3,8 @@ import { parseCsv, parseRows, toAsciiTable, toDelimited } from "./logic";
 import { copyToClipboard } from "../../lib/clipboard";
 import { logEvent } from "../../lib/log";
 import styles from "../shared.module.css";
+import HelpButton from "../../components/HelpButton";
+import { delimiterTableTour } from "./tour";
 
 
 const DELIMITERS: { label: string; value: string }[] = [
@@ -51,7 +53,10 @@ export default function DelimiterTable() {
 
   return (
     <div>
-      <h1 className={styles.title}>Delimiter + Table</h1>
+      <h1 className={styles.title}>
+        Delimiter + Table
+        <HelpButton toolId="delimiter-table" steps={delimiterTableTour} />
+      </h1>
       <p className={styles.sub}>
         Paste column names separated by spaces. First line becomes the header; extra lines become data rows.
       </p>
@@ -109,7 +114,7 @@ export default function DelimiterTable() {
             {copiedField === "delimited" ? "Copied" : "Copy"}
           </button>
         </div>
-        <pre className={styles.pre}>{delimited || " "}</pre>
+         <pre id="delimited-output" className={styles.pre}>{delimited || " "}</pre>
       </div>
 
       <div className={styles.outputBlock}>
@@ -119,7 +124,7 @@ export default function DelimiterTable() {
             {copiedField === "table" ? "Copied" : "Copy"}
           </button>
         </div>
-        <pre className={styles.pre}>{table || " "}</pre>
+           <pre id="table-output" className={styles.pre}>{table || " "}</pre>
       </div>
     </div>
   );

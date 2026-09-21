@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { compressToTarget, type CompressResult } from "./compress";
 import { logEvent } from "../../lib/log";
+import HelpButton from "../../components/HelpButton";
+import { imageCompressTour } from "./tour";
 import sharedStyles from "../shared.module.css";
 import styles from "./styles.module.css";
 
@@ -8,6 +10,7 @@ interface FileEntry {
   id: string;
   file: File;
   selected: boolean;
+  customSizeKB: string; // string so the input can be empty; "" means use the global default
   status: "idle" | "working" | "done" | "error";
   result?: CompressResult;
 }
@@ -24,6 +27,7 @@ export default function ImageCompress() {
       id: crypto.randomUUID(),
       file,
       selected: true,
+      customSizeKB: "",
       status: "idle",
     }));
     setEntries(next);
@@ -37,6 +41,10 @@ export default function ImageCompress() {
     setEntries((prev) => prev.map((e) => (e.id === id ? { ...e, selected: !e.selected } : e)));
   }
 
+  function setCustomSize(id: string, value: string) {
+    setEntries((prev) => prev.map((e) => (e.id === id ? { ...e, customSizeKB: value } : e)));
+  }
+
   function applyFilter() {
     if (!filterText.trim()) return;
     const needle = filterText.trim().toLowerCase();
@@ -48,9 +56,10 @@ export default function ImageCompress() {
     logEvent("image-compress", "run", { count: targets.length, maxSizeKB });
 
     for (const target of targets) {
+      const effectiveTarget = target.customSizeKB.trim() ? Number(target.customSizeKB) : maxSizeKB;
       setEntries((prev) => prev.map((e) => (e.id === target.id ? { ...e, status: "working" } : e)));
       try {
-        const result = await compressToTarget(target.file, maxSizeKB);
+        const result = await compressToTarget(target.file, effectiveTarget || maxSizeKB);
         setEntries((prev) => prev.map((e) => (e.id === target.id ? { ...e, status: "done", result } : e)));
       } catch {
         setEntries((prev) => prev.map((e) => (e.id === target.id ? { ...e, status: "error" } : e)));
@@ -62,7 +71,10 @@ export default function ImageCompress() {
 
   return (
     <div className={sharedStyles.page}>
-      <h1 className={sharedStyles.title}>Image Compress</h1>
+      <h1 className={sharedStyles.title}>
+        Image Compress
+        <HelpButton toolId="image-compress" steps={imageCompressTour} />
+      </h1>
       <p className={sharedStyles.sub}>Target-size JPEG compression, in the browser. Nothing is uploaded anywhere.</p>
 
       <div className={styles.tabs}>
@@ -78,6 +90,7 @@ export default function ImageCompress() {
         <label>
           Max size (KB)
           <input
+            id="max-size"
             className={styles.numInput}
             type="number"
             min={10}
@@ -85,7 +98,7 @@ export default function ImageCompress() {
             onChange={(e) => setMaxSizeKB(Number(e.target.value) || 300)}
           />
         </label>
-        <input type="file" accept="image/*" multiple onChange={(e) => handleFiles(e.target.files)} />
+        <input id="file-input" type="file" accept="image/*" multiple onChange={(e) => handleFiles(e.target.files)} />
       </div>
 
       {entries.length > 0 && (
@@ -98,6 +111,7 @@ export default function ImageCompress() {
               Select none
             </button>
             <input
+              id="filter-input"
               className={styles.textInput}
               placeholder="filter by filename contains…"
               value={filterText}
@@ -106,7 +120,7 @@ export default function ImageCompress() {
             <button className={styles.btn} onClick={applyFilter}>
               Apply filter
             </button>
-            <button className={styles.btn} onClick={runCompression} disabled={selectedCount === 0}>
+            <button id="compress-btn" className={styles.btn} onClick={runCompression} disabled={selectedCount === 0}>
               Compress {selectedCount > 0 ? `(${selectedCount})` : ""}
             </button>
           </div>
@@ -117,6 +131,7 @@ export default function ImageCompress() {
                 <th></th>
                 <th>File</th>
                 <th>Original</th>
+                <th id="target-col-header">Target (KB)</th>
                 <th>Result</th>
                 <th></th>
               </tr>
@@ -130,31 +145,43 @@ export default function ImageCompress() {
                   <td className={styles.filename}>{e.file.name}</td>
                   <td>{(e.file.size / 1024).toFixed(1)} KB</td>
                   <td>
+                    <input
+                      className={styles.numInput}
+                      style={{ width: 60 }}
+                      type="number"
+                      min={10}
+                      placeholder={String(maxSizeKB)}
+                      value={e.customSizeKB}
+                      onChange={(ev) => setCustomSize(e.id, ev.target.value)}
+                    />
+                  </td>
+                  <td>
                     {e.status === "working" && "compressing…"}
-                  {e.status === "error" && <span className={styles.statusError}>failed</span>}
-                  {e.status === "done" && e.result && (
-                    <span className={styles.statusDone}>
-                      {e.result.finalKB.toFixed(1)} KB · q{e.result.quality} · -{e.result.reductionPct.toFixed(0)}%
-                    </span>
-                  )}
-                </td>
-                <td>
-                  {e.status === "done" && e.result && (
-                    <a
-                      href={URL.createObjectURL(e.result.blob)}
-                      download={e.file.name}
-                      className={styles.btn}
-                      onClick={() => logEvent("image-compress", "download", { name: e.file.name })}
-                    >
-                      Download
-                    </a>
-                  )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </>)}
+                    {e.status === "error" && <span className={styles.statusError}>failed</span>}
+                    {e.status === "done" && e.result && (
+                      <span className={styles.statusDone}>
+                        {e.result.finalKB.toFixed(1)} KB · q{e.result.quality} · -{e.result.reductionPct.toFixed(0)}%
+                      </span>
+                    )}
+                  </td>
+                  <td>
+                    {e.status === "done" && e.result && (
+                      <a
+                        href={URL.createObjectURL(e.result.blob)}
+                        download={e.file.name}
+                        className={styles.btn}
+                        onClick={() => logEvent("image-compress", "download", { name: e.file.name })}
+                      >
+                        Download
+                      </a>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
     </div>
   );
 }

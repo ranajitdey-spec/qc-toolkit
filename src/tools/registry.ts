@@ -46,11 +46,11 @@ export const tools: ToolMeta[] = [
     description: "Extract video/image assets and metadata from a card page.",
     component: lazy(() => import("./card-scraper")),
   },
-  {
+   {
     id: "app-card",
     path: "/tools/app-card",
     name: "App Card Details",
-    description: "Extract Q1, font color, tags, red line, and green line from an App Only Card email.",
+    description: "Extract Q1/font/tags/red-green lines and rename the four card files.",
     component: lazy(() => import("./app-card")),
   },
 ];

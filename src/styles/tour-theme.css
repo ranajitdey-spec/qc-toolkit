@@ -1,0 +1,69 @@
+/* Restyles driver.js to use QC Toolkit's own tokens instead of its default
+   generic look. Loaded on-demand only when a tour actually starts. */
+
+.driver-popover {
+  font-family: var(--font-sans);
+  color: var(--text);
+  background-color: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  max-width: 320px;
+}
+
+.driver-popover-title {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.driver-popover-description {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+.driver-popover-progress-text {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.driver-popover-footer-btn {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  padding: 4px 10px;
+}
+
+.driver-popover-footer-btn:hover,
+.driver-popover-footer-btn:focus {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-color: var(--accent);
+}
+
+.driver-popover-close-btn {
+  color: var(--text-muted);
+}
+
+.driver-popover-close-btn:hover,
+.driver-popover-close-btn:focus {
+  color: var(--text);
+}
+
+.driver-popover-arrow-side-left {
+  border-right-color: var(--bg);
+}
+.driver-popover-arrow-side-right {
+  border-left-color: var(--bg);
+}
+.driver-popover-arrow-side-top {
+  border-bottom-color: var(--bg);
+}
+.driver-popover-arrow-side-bottom {
+  border-top-color: var(--bg);
+}
