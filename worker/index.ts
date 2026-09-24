@@ -184,6 +184,7 @@ async function handleExtractPc(request: Request): Promise<Response> {
 
   const html = await res.text();
   const pcUrl = matchOne(html, /<meta property="og:image" content="([^"]+)"/i);
+  console.log("PC extract - length:", html.length, "snippet:", html.slice(0, 300));
 
   if (!pcUrl) {
     return json({ valid: false, error: "No _pc image found on that page." }, 404);
