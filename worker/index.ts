@@ -174,7 +174,14 @@ async function handleExtractPc(request: Request): Promise<Response> {
 
   let res: Response;
   try {
-    res = await fetch(cardUrl, { headers: { "User-Agent": "Mozilla/5.0" } });
+    res = await fetch(cardUrl, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        Referer: "https://www.123greetings.com/",
+        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      },
+    });
   } catch {
     return json({ valid: false, error: "Could not reach that URL." }, 502);
   }
@@ -184,10 +191,9 @@ async function handleExtractPc(request: Request): Promise<Response> {
 
   const html = await res.text();
   const pcUrl = matchOne(html, /<meta property="og:image" content="([^"]+)"/i);
-  console.log("PC extract - length:", html.length, "snippet:", html.slice(0, 300));
 
   if (!pcUrl) {
-    return json({ valid: false, error: "No _pc image found on that page." }, 404);
+    return json({ valid: false, error: `No _pc image found (fetched ${html.length} chars).` }, 404);
   }
 
   const filename = pcUrl.split("/").pop() || "pc.jpg";
