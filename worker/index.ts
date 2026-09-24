@@ -163,6 +163,28 @@ export default {
   },
 
 };
+async function fetchCardHtml(cardUrl: string, attempts = 3): Promise<string | null> {
+  for (let i = 0; i < attempts; i++) {
+    try {
+      const res = await fetch(cardUrl, {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          Referer: "https://www.123greetings.com/",
+          Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        },
+      });
+      if (res.ok) {
+        const html = await res.text();
+        if (html.length > 15000) return html; // real pages are well above this; a short response is a block/stub
+      }
+    } catch {
+      // fall through to retry
+    }
+    if (i < attempts - 1) await new Promise((r) => setTimeout(r, 800));
+  }
+  return null;
+}
 
 async function handleExtractPc(request: Request): Promise<Response> {
   const url = new URL(request.url);
@@ -172,28 +194,14 @@ async function handleExtractPc(request: Request): Promise<Response> {
     return json({ valid: false, error: "Not a recognized 123greetings card URL." }, 400);
   }
 
-  let res: Response;
-  try {
-    res = await fetch(cardUrl, {
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        Referer: "https://www.123greetings.com/",
-        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-      },
-    });
-  } catch {
-    return json({ valid: false, error: "Could not reach that URL." }, 502);
-  }
-  if (!res.ok) {
-    return json({ valid: false, error: `Page returned ${res.status}` }, 502);
+  const html = await fetchCardHtml(cardUrl);
+  if (!html) {
+    return json({ valid: false, error: "Page kept returning a short/blocked response after 3 tries — likely rate-limited or blocked by origin." }, 502);
   }
 
-  const html = await res.text();
   const pcUrl = matchOne(html, /<meta property="og:image" content="([^"]+)"/i);
-
   if (!pcUrl) {
-    return json({ valid: false, error: `No _pc image found (fetched ${html.length} chars).` }, 404);
+    return json({ valid: false, error: "No _pc image found on that page." }, 404);
   }
 
   const filename = pcUrl.split("/").pop() || "pc.jpg";
