@@ -147,8 +147,9 @@ async function handleDownload(request: Request): Promise<Response> {
     return new Response("Could not fetch asset (blocked or not found)", { status: 502 });
   }
 
+  const inline = url.searchParams.get("inline") === "1";
   const headers = new Headers(res.headers);
-  headers.set("content-disposition", `attachment; filename="${filename.replace(/"/g, "")}"`);
+  headers.set("content-disposition", `${inline ? "inline" : "attachment"}; filename="${filename.replace(/"/g, "")}"`);
   return new Response(res.body, { status: 200, headers });
 }
 
@@ -156,7 +157,38 @@ export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     if (url.pathname === "/api/extract-card") return handleExtract(request);
+    if (url.pathname === "/api/extract-pc") return handleExtractPc(request);
     if (url.pathname === "/api/download-asset") return handleDownload(request);
     return env.ASSETS.fetch(request);
   },
+
 };
+
+async function handleExtractPc(request: Request): Promise<Response> {
+  const url = new URL(request.url);
+  const cardUrl = url.searchParams.get("url") ?? "";
+
+  if (!isValidCardUrl(cardUrl)) {
+    return json({ valid: false, error: "Not a recognized 123greetings card URL." }, 400);
+  }
+
+  let res: Response;
+  try {
+    res = await fetch(cardUrl, { headers: { "User-Agent": "Mozilla/5.0" } });
+  } catch {
+    return json({ valid: false, error: "Could not reach that URL." }, 502);
+  }
+  if (!res.ok) {
+    return json({ valid: false, error: `Page returned ${res.status}` }, 502);
+  }
+
+  const html = await res.text();
+  const pcUrl = matchOne(html, /<meta property="og:image" content="([^"]+)"/i);
+
+  if (!pcUrl) {
+    return json({ valid: false, error: "No _pc image found on that page." }, 404);
+  }
+
+  const filename = pcUrl.split("/").pop() || "pc.jpg";
+  return json({ valid: true, pcUrl, filename });
+}

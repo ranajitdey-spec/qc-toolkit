@@ -53,4 +53,11 @@ export const tools: ToolMeta[] = [
     description: "Extract Q1/font/tags/red-green lines and rename the four card files.",
     component: lazy(() => import("./app-card")),
   },
+  {
+    id: "pc-download",
+    path: "/tools/pc-download",
+    name: "PC Image Download",
+    description: "Paste a card URL, get just the _pc preview image, nothing else.",
+    component: lazy(() => import("./pc-download")),
+  },
 ];
