@@ -60,4 +60,11 @@ export const tools: ToolMeta[] = [
     description: "Paste a card URL, get just the _pc preview image, nothing else.",
     component: lazy(() => import("./pc-download")),
   },
+    {
+    id: "content-diff",
+    path: "/tools/content-diff",
+    name: "Content Diff",
+    description: "Side-by-side content comparison with HTML stripping and encoding-issue flags.",
+    component: lazy(() => import("./content-diff")),
+  },
 ];

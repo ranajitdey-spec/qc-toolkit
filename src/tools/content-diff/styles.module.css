@@ -1,0 +1,71 @@
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.col label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-bottom: var(--space-1);
+}
+
+.col textarea {
+  width: 100%;
+  min-height: 160px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: var(--space-2);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  resize: vertical;
+}
+
+.diffOutput {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: var(--space-3);
+  font-size: 14px;
+  line-height: 1.7;
+  margin-bottom: var(--space-3);
+  white-space: pre-wrap;
+}
+
+.added {
+  background: #d4f565;
+  color: #1c1b19;
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
+.removed {
+  background: #ff9eb5;
+  color: #1c1b19;
+  text-decoration: line-through;
+  border-radius: 2px;
+  padding: 0 2px;
+}
+
+.flagsBox {
+  border: 1px solid var(--danger);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.flagItem {
+  font-size: 13px;
+  margin-bottom: var(--space-1);
+}
+
+.flagSnippet {
+  font-family: var(--font-mono);
+  color: var(--danger);
+}
