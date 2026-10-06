@@ -153,11 +153,38 @@ async function handleDownload(request: Request): Promise<Response> {
   return new Response(res.body, { status: 200, headers });
 }
 
+async function handleGrammarCheck(request: Request): Promise<Response> {
+  const url = new URL(request.url);
+  const text = (url.searchParams.get("text") ?? "").trim();
+
+  if (!text) {
+    return json({ matches: [], error: "No text provided." }, 400);
+  }
+
+  const params = new URLSearchParams({ text, language: "en-US" });
+  let res: Response;
+  try {
+    res = await fetch("https://api.languagetool.org/v2/check", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: params.toString(),
+    });
+  } catch {
+    return json({ matches: [], error: "Could not reach grammar check service." }, 502);
+  }
+  if (!res.ok) {
+    return json({ matches: [], error: `Grammar service returned ${res.status}` }, 502);
+  }
+
+  const data = (await res.json()) as { matches?: unknown[] };
+  return json({ matches: data.matches ?? [] });
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     if (url.pathname === "/api/extract-card") return handleExtract(request);
-    if (url.pathname === "/api/extract-pc") return handleExtractPc(request);
+    if (url.pathname === "/api/check-grammar") return handleGrammarCheck(request);
     if (url.pathname === "/api/download-asset") return handleDownload(request);
     return env.ASSETS.fetch(request);
   },

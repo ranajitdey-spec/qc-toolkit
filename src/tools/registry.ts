@@ -67,4 +67,11 @@ export const tools: ToolMeta[] = [
     description: "Side-by-side content comparison with HTML stripping and encoding-issue flags.",
     component: lazy(() => import("./content-diff")),
   },
+  {
+    id: "spell-grammar-check",
+    path: "/tools/spell-grammar-check",
+    name: "Spelling & Grammar Check",
+    description: "Catch typos and grammar issues before the red-line text becomes a URL.",
+    component: lazy(() => import("./spell-grammar-check")),
+  },
 ];

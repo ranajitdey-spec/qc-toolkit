@@ -1,0 +1,79 @@
+.annotated {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: var(--space-3);
+  font-size: 16px;
+  line-height: 1.8;
+  margin-bottom: var(--space-3);
+}
+
+.spelling {
+  text-decoration: underline wavy var(--danger);
+  text-decoration-thickness: 1.5px;
+  cursor: help;
+}
+
+.grammar {
+  text-decoration: underline wavy #c98a1a;
+  text-decoration-thickness: 1.5px;
+  cursor: help;
+}
+
+.btn {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  padding: 5px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  margin-bottom: var(--space-3);
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-color: var(--accent);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.issueList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.issue {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: var(--space-2);
+  font-size: 13px;
+}
+
+.issueTag {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: 3px;
+  margin-right: var(--space-2);
+}
+
+.tagSpelling {
+  background: var(--danger);
+  color: white;
+}
+
+.tagGrammar {
+  background: #c98a1a;
+  color: white;
+}
+
+.clean {
+  color: var(--accent);
+  font-size: 13px;
+}
