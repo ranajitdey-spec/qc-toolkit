@@ -12,7 +12,7 @@ export default function Home() {
       <p className={styles.sub}>Personal utilities. Everything runs in the browser — nothing is uploaded anywhere.</p>
       <div className={styles.grid}>
         {tools.map((tool, i) => (
-          <Link key={tool.id} to={tool.path} className={styles.card} style={{ background: PALETTE[i % PALETTE.length] }}>
+              <Link key={tool.id} to={tool.path} className={styles.card} style={{ background: tool.color ?? PALETTE[i % PALETTE.length] }}>
             <div className={styles.cardTop}>
               <span className={styles.kicker}>{tool.description}</span>
               <span className={styles.arrow}>↗</span>

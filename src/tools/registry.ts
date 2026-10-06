@@ -6,6 +6,7 @@ export interface ToolMeta {
   name: string;
   description: string;
   component: ReturnType<typeof lazy>;
+  color?: string;
 }
 
 // Add a new tool here: one line, pointing at its folder's index.tsx.
@@ -66,6 +67,7 @@ export const tools: ToolMeta[] = [
     name: "Content Diff",
     description: "Side-by-side content comparison with HTML stripping and encoding-issue flags.",
     component: lazy(() => import("./content-diff")),
+    color: "#e09f3e",
   },
   {
     id: "spell-grammar-check",
@@ -73,5 +75,6 @@ export const tools: ToolMeta[] = [
     name: "Spelling & Grammar Check",
     description: "Catch typos and grammar issues before the red-line text becomes a URL.",
     component: lazy(() => import("./spell-grammar-check")),
+    color: "#a7c957",
   },
 ];
