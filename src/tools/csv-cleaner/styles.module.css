@@ -1,0 +1,135 @@
+.controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-3);
+}
+
+.label {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.select {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 4px 8px;
+  min-width: 200px;
+}
+
+.btn {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  padding: 5px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--accent);
+  color: var(--accent-contrast);
+  border-color: var(--accent);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.notice {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: var(--space-2) var(--space-3);
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0 0 var(--space-3);
+}
+
+.noticeWarn {
+  composes: notice;
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.error {
+  color: var(--danger);
+  font-size: 13px;
+  margin: 0 0 var(--space-3);
+}
+
+.fileInfo {
+  font-size: 13px;
+  margin: 0 0 var(--space-3);
+}
+
+.stats {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-3);
+  font-size: 13px;
+}
+
+.progress {
+  width: 220px;
+}
+
+.groupLabel {
+  font-size: 13px;
+  font-weight: 600;
+  margin: var(--space-3) 0 var(--space-1);
+}
+
+.cmpHead,
+.cmpRow {
+  display: grid;
+  grid-template-columns: 56px 1fr 1fr;
+  gap: var(--space-2);
+}
+
+.cmpHead {
+  font-size: 12px;
+  color: var(--text-muted);
+  padding: 0 0 var(--space-1);
+  border-bottom: 1px solid var(--border);
+}
+
+.cmpScroll {
+  max-height: 70vh;
+  overflow: auto;
+}
+
+.cmpRow {
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--border);
+  content-visibility: auto;
+  contain-intrinsic-size: auto 80px;
+}
+
+.rowNum {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.cmpCell {
+  margin: 0;
+  padding: var(--space-2);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-size: 12px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+.cleanedCell {
+  background: #d4f565;
+  color: #1c1b19;
+}

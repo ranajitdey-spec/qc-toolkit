@@ -77,4 +77,11 @@ export const tools: ToolMeta[] = [
     component: lazy(() => import("./spell-grammar-check")),
     color: "#a7c957",
   },
+    {
+    id: "csv-cleaner",
+    path: "/tools/csv-cleaner",
+    name: "CSV Cleaner",
+    description: "Strip HTML from a CSV or Excel column, preview before/after, download the cleaned file.",
+    component: lazy(() => import("./csv-cleaner")),
+  },
 ];
