@@ -51,3 +51,34 @@ export function wrapFaq(items: FaqItem[]): string {
     .join("\n");
   return `${header}\n${body}\n</div>`;
 }
+
+
+const NAMED_ENTITIES: Record<string, string> = {
+  "\u2018": "&lsquo;",
+  "\u2019": "&rsquo;",
+  "\u201C": "&ldquo;",
+  "\u201D": "&rdquo;",
+  "\u2013": "&ndash;",
+  "\u2014": "&mdash;",
+  "\u2026": "&hellip;",
+  "\u00A0": "&nbsp;",
+};
+
+/** Replaces every non-ASCII character with an HTML entity. ASCII (tags, existing entities) is left untouched. */
+export function encodeNonAscii(text: string): string {
+  let out = "";
+  for (const ch of text) {
+    const code = ch.codePointAt(0) ?? 0;
+    out += code < 128 ? ch : (NAMED_ENTITIES[ch] ?? `&#${code};`);
+  }
+  return out;
+}
+
+/** Lists the distinct non-ASCII characters in the text, with how many times each appears. */
+export function listSpecialChars(text: string): { char: string; count: number }[] {
+  const counts = new Map<string, number>();
+  for (const ch of text) {
+    if ((ch.codePointAt(0) ?? 0) >= 128) counts.set(ch, (counts.get(ch) ?? 0) + 1);
+  }
+  return [...counts].map(([char, count]) => ({ char, count }));
+}

@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
-import { parseFaqBlocks, wrapFaq, wrapParagraphs, type Section } from "./logic";
+import { encodeNonAscii, listSpecialChars, parseFaqBlocks, wrapFaq, wrapParagraphs, type Section } from "./logic";
 import { copyToClipboard } from "../../lib/clipboard";
 import { logEvent } from "../../lib/log";
 import styles from "../shared.module.css";
+
 
 const SECTIONS: { label: string; value: Section; hint: string }[] = [
   {
@@ -26,16 +27,16 @@ export default function TextToHtml() {
   const [section, setSection] = useState<Section>("blurb");
   const [input, setInput] = useState("");
   const [copied, setCopied] = useState(false);
+  const [encodeEntities, setEncodeEntities] = useState(true);
 
   const active = SECTIONS.find((s) => s.value === section)!;
 
-  const output = useMemo(() => {
-    if (section === "faq") {
-      return wrapFaq(parseFaqBlocks(input));
-    }
-    return wrapParagraphs(input);
-  }, [section, input]);
+    const output = useMemo(() => {
+    const html = section === "faq" ? wrapFaq(parseFaqBlocks(input)) : wrapParagraphs(input);
+    return encodeEntities ? encodeNonAscii(html) : html;
+  }, [section, input, encodeEntities]);
 
+  const specialChars = useMemo(() => listSpecialChars(input), [input]);
   async function handleCopy() {
     if (!output) return;
     const ok = await copyToClipboard(output);
@@ -69,7 +70,15 @@ export default function TextToHtml() {
       <label className={styles.label} htmlFor="input">
         Input
       </label>
-      <textarea id="input" className={styles.textarea} rows={10} value={input} onChange={(e) => setInput(e.target.value)} />
+      <textarea id="input" className={styles.textarea} rows={10} value={input} onChange={(e) => setInput(e.target.value)} /><label className={styles.label} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        <input type="checkbox" checked={encodeEntities} onChange={(e) => setEncodeEntities(e.target.checked)} />
+        Convert special characters to HTML entities (prevents the � problem)
+      </label>
+      {specialChars.length > 0 && (
+        <p className={styles.sub}>
+          Special characters found: {specialChars.map((c) => `${c.char} ×${c.count}`).join(", ")}
+        </p>
+      )}
 
       <div className={styles.outputBlock}>
         <div className={styles.outputHeader}>
