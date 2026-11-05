@@ -21,6 +21,7 @@ interface ReadResult {
 
 interface CheckResult {
   text: string;
+  labels: string[];
   spelling: SpellingIssue[];
   grammar: GrammarIssue[];
   grammarError: string | null;
@@ -40,6 +41,8 @@ export default function ImageTextCheck() {
   const [dims, setDims] = useState<{ w: number; h: number } | null>(null);
   const [sel, setSel] = useState<Rect | null>(null);
   const [reads, setReads] = useState<ReadResult[]>([]);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [thorough, setThorough] = useState(true);
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -66,6 +69,7 @@ export default function ImageTextCheck() {
     setDims(null);
     setSel(null);
     setReads([]);
+    setSelectedIds(new Set());
     setChecked(null);
     setError(null);
     areaCount.current = 0;
@@ -116,13 +120,15 @@ export default function ImageTextCheck() {
     setChecked(null);
     setStatus("Starting…");
     try {
-      const lines = await readImageText(file, rect, (s, p) => setStatus(`${s} ${Math.round(p * 100)}%`));
+      const lines = await readImageText(file, rect, thorough, setStatus);
       const label = rect ? `Area ${++areaCount.current}` : "Whole image";
-      setReads((prev) => [...prev, { id: crypto.randomUUID(), label, lines }]);
-      logEvent("image-text-check", "read", { area: Boolean(rect), lines: lines.length });
+      const id = crypto.randomUUID();
+      setReads((prev) => [...prev, { id, label, lines }]);
+      setSelectedIds(new Set([id])); // the newest result is the one ticked for checking
+      logEvent("image-text-check", "read", { area: Boolean(rect), thorough, lines: lines.length });
     } catch {
       setError(
-        "Couldn't run text recognition. Check that /tesseract/worker.min.js and /tesseract/lang/eng.traineddata.gz open in your browser (if you see a page instead of a download, the files weren't deployed).",
+        "Couldn't read text from this image. If it keeps happening, check that /tesseract/worker.min.js and /tesseract/lang/eng.traineddata.gz open in your browser (if you see a page instead of a download, the files weren't deployed).",
       );
     } finally {
       setBusy(false);
@@ -130,14 +136,37 @@ export default function ImageTextCheck() {
     }
   }
 
-  function removeRead(id: string) {
-    setReads((prev) => prev.filter((r) => r.id !== id));
+  function toggleSelected(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
     setChecked(null);
   }
 
+  function removeRead(id: string) {
+    setReads((prev) => prev.filter((r) => r.id !== id));
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+    setChecked(null);
+  }
+
+  function clearAll() {
+    setReads([]);
+    setSelectedIds(new Set());
+    setChecked(null);
+  }
+
+  const selectedReads = useMemo(() => reads.filter((r) => selectedIds.has(r.id)), [reads, selectedIds]);
+
   const textToCheck = useMemo(
     () =>
-      reads
+      selectedReads
         .map((r) =>
           r.lines
             .map((l) =>
@@ -151,7 +180,7 @@ export default function ImageTextCheck() {
         )
         .filter(Boolean)
         .join("\n"),
-    [reads, ignoreUnsure],
+    [selectedReads, ignoreUnsure],
   );
 
   async function handleCheck() {
@@ -159,8 +188,14 @@ export default function ImageTextCheck() {
     const text = textToCheck.replace(/[\u2018\u2019]/g, "'");
     const spelling = checkSpelling(text).filter((s) => !IGNORE_WORDS.has(s.word.toLowerCase()));
     const grammar = await checkGrammar(text);
-    setChecked({ text, spelling, grammar: grammar.issues, grammarError: grammar.error ?? null });
-    logEvent("image-text-check", "check", { spelling: spelling.length, grammar: grammar.issues.length });
+    setChecked({
+      text,
+      labels: selectedReads.map((r) => r.label),
+      spelling,
+      grammar: grammar.issues,
+      grammarError: grammar.error ?? null,
+    });
+    logEvent("image-text-check", "check", { spelling: spelling.length, grammar: grammar.issues.length, results: selectedReads.length });
   }
 
   const segments = checked ? buildSegments(checked.text, checked.spelling, checked.grammar) : [];
@@ -218,6 +253,10 @@ export default function ImageTextCheck() {
             <button className={styles.btn} onClick={() => handleRead(false)} disabled={busy}>
               Read whole image
             </button>
+            <label className={styles.checkLabel} style={{ margin: 0 }}>
+              <input type="checkbox" checked={thorough} onChange={(e) => setThorough(e.target.checked)} disabled={busy} />
+              Thorough read (tries several sizes, slower, better for big or script lettering)
+            </label>
           </div>
         </>
       )}
@@ -227,17 +266,27 @@ export default function ImageTextCheck() {
 
       {reads.length > 0 && (
         <>
-          <p className={styles.legend}>
-            Word colors show how sure the reader is: normal = sure, amber = unsure, red = very unsure. Unsure does not mean misspelled, and a real typo can be marked unsure.
-          </p>
-          {reads.map((r) => {
+          <div className={styles.controls} style={{ justifyContent: "space-between" }}>
+            <p className={styles.legend} style={{ margin: 0 }}>
+              Newest result first. Tick the results you want to check; the newest is ticked automatically. Word colors: normal = sure, amber =
+              unsure, red = very unsure. Unsure does not mean misspelled, and a real typo can be marked unsure.
+            </p>
+            <button className={styles.btn} onClick={clearAll} disabled={busy}>
+              Clear all
+            </button>
+          </div>
+
+          {[...reads].reverse().map((r) => {
             const unsure = r.lines.reduce((n, l) => n + l.words.filter((w) => w.confidence < UNSURE_BELOW).length, 0);
             return (
               <div key={r.id} className={styles.readCard}>
                 <div className={styles.readHead}>
-                  <span>
-                    {r.label} <span className={styles.readMeta}>· {unsure} unsure word(s)</span>
-                  </span>
+                  <label style={{ display: "flex", alignItems: "center", gap: 6, cursor: "pointer" }}>
+                    <input type="checkbox" checked={selectedIds.has(r.id)} onChange={() => toggleSelected(r.id)} />
+                    <span>
+                      {r.label} <span className={styles.readMeta}>· {unsure} unsure word(s)</span>
+                    </span>
+                  </label>
                   <button className={styles.btn} onClick={() => removeRead(r.id)}>
                     Remove
                   </button>
@@ -262,7 +311,7 @@ export default function ImageTextCheck() {
           </label>
           <div className={styles.controls}>
             <button className={styles.btn} onClick={handleCheck} disabled={busy || !textToCheck.trim()}>
-              Check spelling &amp; grammar
+              Check selected results ({selectedReads.length})
             </button>
           </div>
         </>
@@ -270,6 +319,7 @@ export default function ImageTextCheck() {
 
       {checked && (
         <>
+          <p className={styles.legend}>Checked: {checked.labels.join(", ")}</p>
           {checked.grammarError && <p className={styles.error}>{checked.grammarError}</p>}
           <div className={styles.annotated}>
             {segments.map((seg, i) =>
