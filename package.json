@@ -7,10 +7,13 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "predev": "node scripts/copy-ocr-assets.mjs",
+    "prebuild": "node scripts/copy-ocr-assets.mjs"
   },
   "dependencies": {
     "@jsquash/webp": "^1.5.0",
+    "@tesseract.js-data/eng": "^1.0.0",
     "dictionary-en": "^3.2.0",
     "diff": "^9.0.0",
     "driver.js": "^1.8.0",
@@ -20,7 +23,8 @@
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.3",
-    "read-excel-file": "^9.3.13"
+    "read-excel-file": "^9.3.13",
+    "tesseract.js": "^7.0.0"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^5.20260911.1",

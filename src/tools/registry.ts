@@ -84,4 +84,11 @@ export const tools: ToolMeta[] = [
     description: "Strip HTML from a CSV or Excel column, preview before/after, download the cleaned file.",
     component: lazy(() => import("./csv-cleaner")),
   },
+    {
+    id: "image-text-check",
+    path: "/tools/image-text-check",
+    name: "Image Text Check",
+    description: "Read the text on a banner image and check its spelling and grammar.",
+    component: lazy(() => import("./image-text-check")),
+  },
 ];
