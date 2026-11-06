@@ -29,6 +29,8 @@ interface CheckResult {
 
 const clamp = (v: number, min: number, max: number) => Math.min(Math.max(v, min), max);
 
+type DragMode = "new" | "move" | "nw" | "ne" | "sw" | "se";
+
 function confClass(c: number): string | undefined {
   if (c < UNSURE_BELOW) return styles.confLow;
   if (c < MID_BELOW) return styles.confMid;
@@ -50,7 +52,8 @@ export default function ImageTextCheck() {
   const [checked, setChecked] = useState<CheckResult | null>(null);
 
   const imgRef = useRef<HTMLImageElement>(null);
-  const dragStart = useRef<{ x: number; y: number } | null>(null);
+ const wrapRef = useRef<HTMLDivElement>(null);
+  const drag = useRef<{ mode: DragMode; start: { x: number; y: number }; orig: Rect | null } | null>(null);
   const areaCount = useRef(0);
 
   useEffect(() => {
@@ -86,26 +89,64 @@ export default function ImageTextCheck() {
 
   function onPointerDown(e: React.PointerEvent) {
     if (!imgRef.current || busy) return;
-    e.currentTarget.setPointerCapture(e.pointerId);
-    dragStart.current = toNatural(e);
+    wrapRef.current?.setPointerCapture(e.pointerId);
+    drag.current = { mode: "new", start: toNatural(e), orig: null };
     setSel(null);
   }
 
+  // Starts moving the box (drag inside it) or resizing it (drag a corner square).
+  function startDrag(e: React.PointerEvent, mode: DragMode) {
+    if (!sel || busy) return;
+    e.stopPropagation();
+    wrapRef.current?.setPointerCapture(e.pointerId);
+    drag.current = { mode, start: toNatural(e), orig: sel };
+  }
+
   function onPointerMove(e: React.PointerEvent) {
-    const start = dragStart.current;
-    if (!start || !imgRef.current) return;
+    const d = drag.current;
+    if (!d || !imgRef.current || !dims) return;
     const p = toNatural(e);
-    setSel({
-      left: Math.min(start.x, p.x),
-      top: Math.min(start.y, p.y),
-      width: Math.abs(p.x - start.x),
-      height: Math.abs(p.y - start.y),
-    });
+
+    if (d.mode === "new") {
+      setSel({
+        left: Math.min(d.start.x, p.x),
+        top: Math.min(d.start.y, p.y),
+        width: Math.abs(p.x - d.start.x),
+        height: Math.abs(p.y - d.start.y),
+      });
+      return;
+    }
+
+    const o = d.orig;
+    if (!o) return;
+    const dx = p.x - d.start.x;
+    const dy = p.y - d.start.y;
+
+    if (d.mode === "move") {
+      setSel({
+        ...o,
+        left: clamp(o.left + dx, 0, dims.w - o.width),
+        top: clamp(o.top + dy, 0, dims.h - o.height),
+      });
+      return;
+    }
+
+    // Corner resize: the opposite corner stays where it is.
+    let x0 = o.left;
+    let y0 = o.top;
+    let x1 = o.left + o.width;
+    let y1 = o.top + o.height;
+    if (d.mode === "nw" || d.mode === "sw") x0 = clamp(x0 + dx, 0, dims.w);
+    else x1 = clamp(x1 + dx, 0, dims.w);
+    if (d.mode === "nw" || d.mode === "ne") y0 = clamp(y0 + dy, 0, dims.h);
+    else y1 = clamp(y1 + dy, 0, dims.h);
+    setSel({ left: Math.min(x0, x1), top: Math.min(y0, y1), width: Math.abs(x1 - x0), height: Math.abs(y1 - y0) });
   }
 
   function onPointerUp() {
-    dragStart.current = null;
-    setSel((s) => (s && (s.width < 10 || s.height < 10) ? null : s));
+    const mode = drag.current?.mode;
+    drag.current = null;
+    if (mode === "new") setSel((s) => (s && (s.width < 10 || s.height < 10) ? null : s));
   }
 
   async function handleRead(useSelection: boolean) {
@@ -216,9 +257,10 @@ export default function ImageTextCheck() {
       {imageUrl && (
         <>
           <p className={styles.legend}>
-            Drag a box over the text to read just that area. Photo areas produce junk words, so selecting only the text gives the cleanest result.
+            Drag a box over the text to read just that area. Then drag the corner squares to resize it, or drag inside the box to move it. Photo areas produce junk words, so selecting only the text gives the cleanest result.
           </p>
           <div
+            ref={wrapRef}
             className={styles.imageWrap}
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove}
@@ -234,7 +276,7 @@ export default function ImageTextCheck() {
               onLoad={(e) => setDims({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })}
             />
             {sel && dims && (
-              <div
+                 <div
                 className={styles.selection}
                 style={{
                   left: `${(sel.left / dims.w) * 100}%`,
@@ -242,13 +284,22 @@ export default function ImageTextCheck() {
                   width: `${(sel.width / dims.w) * 100}%`,
                   height: `${(sel.height / dims.h) * 100}%`,
                 }}
-              />
+                onPointerDown={(e) => startDrag(e, "move")}
+              >
+                <div className={`${styles.handle} ${styles.handleNW}`} onPointerDown={(e) => startDrag(e, "nw")} />
+                <div className={`${styles.handle} ${styles.handleNE}`} onPointerDown={(e) => startDrag(e, "ne")} />
+                <div className={`${styles.handle} ${styles.handleSW}`} onPointerDown={(e) => startDrag(e, "sw")} />
+                <div className={`${styles.handle} ${styles.handleSE}`} onPointerDown={(e) => startDrag(e, "se")} />
+              </div>
             )}
           </div>
 
           <div className={styles.controls}>
             <button className={styles.btn} onClick={() => handleRead(true)} disabled={busy || !sel}>
               Read selected area
+            </button>
+            <button className={styles.btn} onClick={() => setSel(null)} disabled={busy || !sel}>
+              Clear selection
             </button>
             <button className={styles.btn} onClick={() => handleRead(false)} disabled={busy}>
               Read whole image
