@@ -83,6 +83,7 @@ export const tools: ToolMeta[] = [
     name: "CSV Cleaner",
     description: "Strip HTML from a CSV or Excel column, preview before/after, download the cleaned file.",
     component: lazy(() => import("./csv-cleaner")),
+    color: "#52b788",
   },
     {
     id: "image-text-check",
@@ -90,6 +91,7 @@ export const tools: ToolMeta[] = [
     name: "Image Text Check",
     description: "Read the text on a banner image and check its spelling and grammar.",
     component: lazy(() => import("./image-text-check")),
+    color: "#73ba9b",
   },
     {
     id: "image-base64",
@@ -97,5 +99,6 @@ export const tools: ToolMeta[] = [
     name: "Image to Base64",
     description: "Turn image URLs or files into data URLs for pasting into local HTML prototypes.",
     component: lazy(() => import("./image-base64")),
+    color: "#e26d5c",
   },
 ];
