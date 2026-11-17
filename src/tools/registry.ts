@@ -91,4 +91,11 @@ export const tools: ToolMeta[] = [
     description: "Read the text on a banner image and check its spelling and grammar.",
     component: lazy(() => import("./image-text-check")),
   },
+    {
+    id: "image-base64",
+    path: "/tools/image-base64",
+    name: "Image to Base64",
+    description: "Turn image URLs or files into data URLs for pasting into local HTML prototypes.",
+    component: lazy(() => import("./image-base64")),
+  },
 ];

@@ -186,6 +186,7 @@ export default {
     if (url.pathname === "/api/extract-card") return handleExtract(request);
     if (url.pathname === "/api/check-grammar") return handleGrammarCheck(request);
     if (url.pathname === "/api/download-asset") return handleDownload(request);
+    if (url.pathname === "/api/fetch-image") return handleFetchImage(request);
     return env.ASSETS.fetch(request);
   },
 
@@ -233,4 +234,61 @@ async function handleExtractPc(request: Request): Promise<Response> {
 
   const filename = pcUrl.split("/").pop() || "pc.jpg";
   return json({ valid: true, pcUrl, filename });
+}
+
+
+// Hosts the image proxy may fetch from. Add a host here if you need another one.
+const IMAGE_HOSTS = ["i.123g.us", "c.123g.us", "www.123greetings.com", "123greetings.com", "m.123greetings.com"];
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
+function isAllowedImageUrl(u: URL): boolean {
+  return u.protocol === "https:" && IMAGE_HOSTS.includes(u.hostname.toLowerCase());
+}
+
+async function handleFetchImage(request: Request): Promise<Response> {
+  const target = new URL(request.url).searchParams.get("url") ?? "";
+
+  let parsed: URL;
+  try {
+    parsed = new URL(target);
+  } catch {
+    return json({ error: "That is not a valid URL." }, 400);
+  }
+  if (!isAllowedImageUrl(parsed)) {
+    return json({ error: `Host not allowed: ${parsed.hostname || target}. Only 123Greetings image hosts can be fetched.` }, 400);
+  }
+
+  let res: Response;
+  try {
+    res = await fetch(parsed.toString(), {
+      headers: {
+        "User-Agent": "Mozilla/5.0",
+        Referer: "https://www.123greetings.com/",
+        Accept: "image/*,*/*;q=0.8",
+      },
+    });
+  } catch {
+    return json({ error: "Could not reach that URL." }, 502);
+  }
+  if (!res.ok) return json({ error: `The source returned ${res.status}.` }, 502);
+
+  // A redirect must not lead outside the allowed hosts.
+  try {
+    if (!isAllowedImageUrl(new URL(res.url))) return json({ error: "The URL redirected to a host that is not allowed." }, 400);
+  } catch {
+    // res.url missing: keep going, the original host was already checked
+  }
+
+  const type = res.headers.get("content-type") ?? "";
+  if (type.includes("text/html")) {
+    return json({ error: "The source returned a web page, not an image (wrong URL, or the request was blocked)." }, 502);
+  }
+  if (Number(res.headers.get("content-length") ?? "0") > MAX_IMAGE_BYTES) {
+    return json({ error: "That image is larger than 5 MB." }, 413);
+  }
+
+  return new Response(res.body, {
+    status: 200,
+    headers: { "content-type": type || "application/octet-stream", "cache-control": "no-store" },
+  });
 }
